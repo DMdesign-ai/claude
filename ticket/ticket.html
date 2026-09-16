@@ -55,7 +55,7 @@
   }
   .stage-center {
     display: grid; place-items: center;
-    perspective: 1400px;
+    perspective: 1100px;
     padding-block: 24px;
   }
   .stage-foot {
@@ -81,17 +81,22 @@
 
   .ticket-target {
     --rx: 0deg; --ry: 0deg; --tx: 0px; --ty: 0px; --scale: 1;
-    transform-style: preserve-3d;
+    position: relative;
     transform:
       translate3d(var(--tx), var(--ty), 0)
       rotateX(var(--rx)) rotateY(var(--ry))
       scale(var(--scale));
-    filter: drop-shadow(
-      calc(var(--tx) * -1.6)
-      calc(var(--ty) * -1.6 + 26px)
-      30px rgba(0, 0, 0, .6)
-    );
-    will-change: transform, filter;
+    backface-visibility: hidden;
+    will-change: transform;
+  }
+  /* soft shadow on its own layer; it slides opposite to the drift */
+  .ticket-shadow {
+    position: absolute; inset: 6% 3% 0;
+    border-radius: 24px;
+    background: rgba(0, 0, 0, .6);
+    filter: blur(22px);
+    transform: translate3d(calc(var(--tx) * -1.4), calc(var(--ty) * -1.4 + 18px), 0);
+    pointer-events: none;
   }
 
   /* ── The ticket ─────────────────────────────────────────── */
@@ -283,7 +288,6 @@
   /* ── Motion preferences ─────────────────────────────────── */
   @media (prefers-reduced-motion: reduce) {
     .ticket-entrance, .ticket-sweep::after { animation: none; }
-    .ticket-target { transition: none; }
   }
   .ticket-target:focus-visible { outline: 2px solid var(--holo-5); outline-offset: 8px; border-radius: 18px; }
 </style>
@@ -297,6 +301,7 @@
   <div class="stage-center">
     <div class="ticket-entrance" data-ticket-entrance>
       <div class="ticket-target" data-ticket-target tabindex="0" role="group" aria-label="Beta ticket">
+        <div class="ticket-shadow" aria-hidden="true"></div>
         <section class="ticket" data-ticket aria-labelledby="beta-ticket-title" aria-describedby="beta-ticket-description">
           <div class="ticket-surface" aria-hidden="true">
             <div class="ticket-colors"></div>
@@ -339,14 +344,18 @@ to confirm your email.">Check your inbox <br>to confirm your email.</p>
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // Tuning
-  const MAX_TILT   = reduceMotion ? 0 : 15;   // deg
-  const MAX_SHIFT  = reduceMotion ? 0 : 10;   // px the card drifts toward the pointer
-  const HOVER_ZOOM = reduceMotion ? 1 : 1.025;
-  const SPEED      = 9;                       // higher = snappier follow
+  const MAX_TILT   = reduceMotion ? 0 : 11;   // deg at the card's edge
+  const MAX_SHIFT  = reduceMotion ? 0 : 6;    // px the card drifts toward the pointer
+  const HOVER_ZOOM = reduceMotion ? 1 : 1.02;
+  const SPEED      = 10;                      // higher = snappier follow
 
-  // Soft-clamps a distance so the ticket keeps responding far outside its box
-  // without ever over-rotating: ±1 at its edge, tends to ±1.67 at infinity.
-  const soft = v => v / (1 + Math.abs(v) * 0.6) * 1.0;
+  // Linear inside the card (so the light sits exactly under the cursor),
+  // then eases to a hard cap of ±1.25 however far away the pointer goes.
+  const soft = v => {
+    const a = Math.abs(v);
+    const s = a <= 1 ? a : 1 + .25 * (1 - Math.exp(-(a - 1) * 1.5));
+    return Math.sign(v) * s;
+  };
   const lerp = (a, b, t) => a + (b - a) * t;
 
   const rest = { rx: 0, ry: 0, tx: 0, ty: 0, fx: 50, fy: 50, bx: 50, by: 50,
@@ -367,8 +376,8 @@ to confirm your email.">Check your inbox <br>to confirm your email.</p>
     tgt.tx = sx * MAX_SHIFT;
     tgt.ty = sy * MAX_SHIFT;
 
-    tgt.fx = 50 + sx * 55;              // highlight may run just past the edge
-    tgt.fy = 50 + sy * 55;
+    tgt.fx = 50 + sx * 50;              // exactly under the cursor inside the card
+    tgt.fy = 50 + sy * 50;
     tgt.bx = 50 + sx * 90;
     tgt.by = 50 + sy * 90;
     tgt.shift = 50 + sx * 38 - sy * 16; // rainbow slides against the movement
@@ -383,10 +392,17 @@ to confirm your email.">Check your inbox <br>to confirm your email.</p>
     lastInput = performance.now();
   }
 
+  // Measure the untransformed wrapper, never the tilting card itself:
+  // measuring the card would feed its own motion back into the next frame.
+  let box = null;
+  function measure() { box = entrance.getBoundingClientRect(); }
+  addEventListener('resize', measure);
+  addEventListener('scroll', measure, { passive: true });
+
   function aimAt(clientX, clientY) {
-    const r = ticket.getBoundingClientRect();
-    aim((clientX - (r.left + r.width  / 2)) / (r.width  / 2),
-        (clientY - (r.top  + r.height / 2)) / (r.height / 2));
+    if (!box) measure();
+    aim((clientX - (box.left + box.width  / 2)) / (box.width  / 2),
+        (clientY - (box.top  + box.height / 2)) / (box.height / 2));
   }
 
   function release() {
@@ -492,7 +508,7 @@ to confirm your email.">Check your inbox <br>to confirm your email.</p>
   // Wait for the entrance to land before the tilt takes over the transform chain
   const start = () => {
     if (started) return;
-    started = true; prev = performance.now(); requestAnimationFrame(frame);
+    started = true; measure(); prev = performance.now(); requestAnimationFrame(frame);
   };
   if (reduceMotion) start();
   else entrance.addEventListener('animationend', start, { once: true });
