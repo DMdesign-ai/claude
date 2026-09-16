@@ -32,3 +32,7 @@ The three assets are inline SVG data URIs on `.ticket` so the file has no depend
 ```
 
 The stub divider sits at 76.5% of the width (x = 306 in the 400 × 250 mask). Change `--stub` if you move it.
+
+## Staff badge variant
+
+`../badge/index.html` reuses the same surface layers and pointer loop as a portrait ID badge with a lanyard slot, portrait placeholder, security stripe, and ID footer. Edit the block marked "Edit these" in the markup for the name, role, department, and ID, and point `--badge-photo` on `.badge` at a photo. Drop the official wordmark in as an SVG in place of the text wordmark if you have it.

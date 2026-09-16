@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TWINT Staff Badge</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  /* ── Tokens ─────────────────────────────────────────────── */
+  :root {
+    color-scheme: dark;
+    --stage:       #0d0d0f;
+    --stage-glow:  #1c1c22;
+    --ink:         #f2f2f4;
+    --muted:       #83848c;
+    --card-base:   #0a0a0b;
+    --card-deep:   #000000;
+    --card-panel:  rgba(255, 255, 255, .045);
+    --silver-1:    #ffffff;
+    --silver-2:    #b9bbc4;
+    --edge:        rgba(255, 255, 255, .28);
+
+    /* security-hologram bands */
+    --holo-1: #ff8f8f; --holo-2: #ffd08a; --holo-3: #c8ff8f;
+    --holo-4: #8fffd4; --holo-5: #8fb8ff; --holo-6: #d48fff; --holo-7: #ff8fd8;
+
+    --font-display: "Sora", "Avenir Next", "Segoe UI", Helvetica, Arial, sans-serif;
+    --font-body:    "DM Sans", "Helvetica Neue", Arial, sans-serif;
+    --font-mono:    "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  }
+
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(110% 70% at 50% 100%, var(--stage-glow) 0%, transparent 60%),
+      var(--stage);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .stage {
+    min-height: 100%;
+    box-sizing: border-box;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: 20px;
+    padding-inline: 16px;
+    padding-block: 28px;
+    max-width: 720px;
+    margin-inline: auto;
+  }
+  .stage-head {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .stage-center {
+    display: grid; place-items: center;
+    perspective: 1100px;
+    padding-block: 20px;
+  }
+  .stage-foot { text-align: center; color: var(--muted); font-size: 13px; text-wrap: balance; }
+
+  /* ── Entrance & tilt wrappers ───────────────────────────── */
+  .badge-entrance {
+    width: min(100%, 330px);
+    animation: badge-enter 1100ms cubic-bezier(.2, .8, .2, 1) both;
+    transform-style: preserve-3d;
+  }
+  @keyframes badge-enter {
+    from { opacity: 0; transform: translateY(-60px) rotateX(-14deg) scale(.96); }
+    to   { opacity: 1; transform: translateY(0)    rotateX(0)      scale(1); }
+  }
+  .badge-target {
+    --rx: 0deg; --ry: 0deg; --tx: 0px; --ty: 0px; --scale: 1;
+    position: relative;
+    transform:
+      translate3d(var(--tx), var(--ty), 0)
+      rotateX(var(--rx)) rotateY(var(--ry))
+      scale(var(--scale));
+    backface-visibility: hidden;
+    will-change: transform;
+  }
+  .badge-shadow {
+    position: absolute; inset: 6% 3% 0;
+    border-radius: 28px;
+    background: rgba(0, 0, 0, .65);
+    filter: blur(22px);
+    transform: translate3d(calc(var(--tx) * -1.4), calc(var(--ty) * -1.4 + 18px), 0);
+    pointer-events: none;
+  }
+
+  /* ── The badge ──────────────────────────────────────────── */
+  .badge {
+    /* geometry: 340 × 540 card, 24px corners, lanyard slot at the top */
+    --badge-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 340 540' preserveAspectRatio='none'><path fill='%23fff' fill-rule='evenodd' d='M24 0H316A24 24 0 0 1 340 24V516A24 24 0 0 1 316 540H24A24 24 0 0 1 0 516V24A24 24 0 0 1 24 0Z M148 28H192A6 6 0 0 1 192 40H148A6 6 0 0 1 148 28Z'/></svg>");
+    /* placeholder portrait: swap for url("your-photo.jpg") */
+    --badge-photo: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><rect width='120' height='120' fill='%23202024'/><circle cx='60' cy='46' r='22' fill='%234a4b54'/><path d='M14 120c4-30 22-44 46-44s42 14 46 44Z' fill='%234a4b54'/></svg>");
+    --foil-texture: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='240' height='240' filter='url(%23g)'/></svg>");
+
+    /* live foil state — written by the pointer loop */
+    --rainbow-shift: 50%;
+    --rainbow-angle: 45deg;
+    --foil-active: 0;
+    --foil-x: 50%;
+    --foil-y: 50%;
+    --foil-band-x: 50%;
+    --foil-band-y: 50%;
+
+    --rainbow: linear-gradient(var(--rainbow-angle),
+      var(--holo-1) 0%, var(--holo-2) 14%, var(--holo-3) 28%, var(--holo-4) 43%,
+      var(--holo-5) 57%, var(--holo-6) 71%, var(--holo-7) 86%, var(--holo-1) 100%);
+
+    position: relative;
+    width: 100%;
+    aspect-ratio: 340 / 540;
+    isolation: isolate;
+    container-type: inline-size;
+    background: linear-gradient(170deg, var(--card-base), var(--card-deep));
+    -webkit-mask: var(--badge-mask) center / 100% 100% no-repeat;
+            mask: var(--badge-mask) center / 100% 100% no-repeat;
+    transform: translateZ(0);
+    user-select: none;
+  }
+
+  .badge-surface { position: absolute; inset: 0; pointer-events: none; }
+  .badge-surface > * { position: absolute; inset: 0; }
+
+  /* matte black with a restrained hologram that lives where the light is */
+  .badge-colors {
+    background: var(--rainbow);
+    background-size: 150% 150%;
+    background-position: var(--rainbow-shift) 50%;
+    opacity: calc(.08 + .40 * var(--foil-active));
+    mix-blend-mode: screen;
+    -webkit-mask-image: radial-gradient(60% 45% at var(--foil-x) var(--foil-y),
+      #000 0%, rgba(0,0,0,.4) 50%, transparent 100%);
+            mask-image: radial-gradient(60% 45% at var(--foil-x) var(--foil-y),
+      #000 0%, rgba(0,0,0,.4) 50%, transparent 100%);
+  }
+  .badge-grain {
+    background:
+      repeating-linear-gradient(calc(var(--rainbow-angle) + 90deg),
+        rgba(255,255,255,.05) 0 1px, transparent 1px 3px),
+      var(--foil-texture);
+    background-size: 100% 100%, 240px 240px;
+    background-position: var(--foil-x) var(--foil-y), 0 0;
+    mix-blend-mode: overlay;
+    opacity: .5;
+  }
+  .badge-sweep {
+    background: linear-gradient(var(--rainbow-angle),
+      transparent 38%, rgba(255,255,255,.16) 48%, rgba(255,255,255,.26) 50%,
+      rgba(255,255,255,.16) 52%, transparent 62%);
+    background-size: 220% 220%;
+    background-position: var(--foil-band-x) var(--foil-band-y);
+    mix-blend-mode: soft-light;
+    opacity: calc(.3 + .7 * var(--foil-active));
+  }
+  .badge-sweep::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(105deg, transparent 38%, rgba(255,255,255,.5) 50%, transparent 62%);
+    background-size: 300% 100%;
+    background-position: 120% 0;
+    animation: badge-sweep 1500ms cubic-bezier(.4, 0, .2, 1) 550ms both;
+  }
+  @keyframes badge-sweep { from { background-position: 120% 0; } to { background-position: -20% 0; } }
+  .badge-edge {
+    background: radial-gradient(90% 90% at var(--foil-x) var(--foil-y),
+      rgba(255,255,255,.7) 0%, var(--edge) 45%, rgba(255,255,255,.08) 100%);
+    -webkit-mask:
+      var(--badge-mask) center / 100% 100% no-repeat,
+      var(--badge-mask) center / calc(100% - 3px) calc(100% - 3px) no-repeat;
+    -webkit-mask-composite: xor;
+            mask:
+      var(--badge-mask) center / 100% 100% no-repeat,
+      var(--badge-mask) center / calc(100% - 3px) calc(100% - 3px) no-repeat;
+            mask-composite: exclude;
+  }
+
+  /* holographic security stripe down the right edge */
+  .badge-stripe {
+    position: absolute;
+    top: 14%; bottom: 8%; right: 6.5%;
+    width: 3.2%;
+    border-radius: 999px;
+    background: var(--rainbow);
+    background-size: 100% 400%;
+    background-position: 50% var(--foil-y);
+    opacity: calc(.45 + .55 * var(--foil-active));
+    -webkit-mask-image: linear-gradient(180deg, transparent, #000 12%, #000 88%, transparent);
+            mask-image: linear-gradient(180deg, transparent, #000 12%, #000 88%, transparent);
+  }
+  .badge-stripe::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: var(--foil-texture);
+    background-size: 120px 120px;
+    mix-blend-mode: overlay; opacity: .8;
+  }
+
+  /* ── Content ────────────────────────────────────────────── */
+  .badge-content {
+    position: absolute; inset: 0;
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+    padding: 12% 15% 8% 9%;
+    box-sizing: border-box;
+    gap: 5cqw;
+  }
+
+  .badge-brand {
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .badge-wordmark {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 8.6cqw;
+    letter-spacing: -.01em;
+    line-height: 1;
+  }
+  .badge-type {
+    font-family: var(--font-mono); font-size: 3.1cqw;
+    letter-spacing: .16em; text-transform: uppercase;
+    color: var(--silver-2);
+    border: 1px solid rgba(255,255,255,.22);
+    border-radius: 999px; padding: 1.4cqw 2.8cqw;
+  }
+
+  .badge-photo {
+    width: 40cqw; aspect-ratio: 1;
+    border-radius: 6cqw;
+    background: var(--badge-photo) center / cover no-repeat, var(--card-panel);
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,.14),
+      inset 0 0 0 1px rgba(0,0,0,.6);
+    position: relative; overflow: hidden;
+  }
+  /* photo catches a little of the hologram too */
+  .badge-photo::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: var(--rainbow);
+    background-size: 200% 200%;
+    background-position: var(--rainbow-shift) 50%;
+    mix-blend-mode: overlay;
+    opacity: calc(.15 * var(--foil-active));
+  }
+
+  .badge-person { display: grid; align-content: end; gap: 1.2cqw; }
+  .badge-person h2, .badge-person p { margin: 0; }
+  .badge-person h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 9cqw;
+    line-height: 1.05;
+    letter-spacing: -.02em;
+    text-wrap: balance;
+  }
+  .badge-person p {
+    font-size: 4.2cqw; font-weight: 500;
+    color: var(--silver-2);
+  }
+  .badge-person .dept {
+    font-family: var(--font-mono); font-size: 3cqw;
+    letter-spacing: .14em; text-transform: uppercase;
+    color: var(--muted); margin-top: .8cqw;
+  }
+
+  .badge-foot {
+    display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 4cqw;
+    border-top: 1px solid rgba(255,255,255,.12);
+    padding-top: 4cqw;
+    font-family: var(--font-mono); font-size: 3cqw;
+    letter-spacing: .12em; text-transform: uppercase;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .badge-foot dl { margin: 0; display: grid; gap: 1cqw; }
+  .badge-foot dt { display: inline; }
+  .badge-foot dd { display: inline; margin: 0; color: var(--silver-2); }
+  .badge-foot .row { display: block; }
+
+  /* decorative barcode built from a repeating gradient */
+  .badge-code {
+    width: 22cqw; height: 7cqw;
+    background: repeating-linear-gradient(90deg,
+      var(--silver-2) 0 1px, transparent 1px 3px,
+      var(--silver-2) 3px 5px, transparent 5px 6px,
+      var(--silver-2) 6px 7px, transparent 7px 10px,
+      var(--silver-2) 10px 13px, transparent 13px 14px);
+    opacity: .75;
+  }
+
+  /* foil text: silver at rest, hologram where the light hits */
+  .foil-text {
+    position: relative;
+    width: max-content; max-width: 100%;
+    color: transparent;
+    background: linear-gradient(180deg, var(--silver-1) 0%, var(--silver-2) 100%);
+    -webkit-background-clip: text; background-clip: text;
+  }
+  .foil-text::after {
+    content: attr(data-foil-text);
+    position: absolute; inset: 0;
+    white-space: pre-line;
+    color: transparent;
+    background: var(--rainbow);
+    background-size: 300% 300%;
+    background-position: var(--rainbow-shift) 50%;
+    -webkit-background-clip: text; background-clip: text;
+    opacity: calc(.85 * var(--foil-active));
+    -webkit-mask-image: radial-gradient(120% 160% at var(--foil-x) var(--foil-y),
+      #000 0%, rgba(0,0,0,.3) 60%, transparent 100%);
+            mask-image: radial-gradient(120% 160% at var(--foil-x) var(--foil-y),
+      #000 0%, rgba(0,0,0,.3) 60%, transparent 100%);
+    pointer-events: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .badge-entrance, .badge-sweep::after { animation: none; }
+  }
+  .badge-target:focus-visible { outline: 2px solid var(--holo-5); outline-offset: 10px; border-radius: 24px; }
+</style>
+</head>
+<body>
+
+<main class="stage">
+  <header class="stage-head" aria-hidden="true">
+    <span>Staff ID</span>
+    <span>TWINT AG · Zürich</span>
+  </header>
+
+  <div class="stage-center">
+    <div class="badge-entrance" data-badge-entrance>
+      <div class="badge-target" data-badge-target tabindex="0" role="group" aria-label="Staff badge">
+        <div class="badge-shadow" aria-hidden="true"></div>
+        <section class="badge" data-badge aria-labelledby="badge-name" aria-describedby="badge-role">
+          <div class="badge-surface" aria-hidden="true">
+            <div class="badge-colors"></div>
+            <div class="badge-grain"></div>
+            <div class="badge-sweep" data-badge-sweep></div>
+            <div class="badge-edge"></div>
+          </div>
+          <div class="badge-stripe" aria-hidden="true"></div>
+
+          <div class="badge-content">
+            <!-- ── Edit these ─────────────────────────────── -->
+            <div class="badge-brand">
+              <div class="badge-wordmark foil-text" data-foil-text="TWINT" role="img" aria-label="TWINT">TWINT</div>
+              <div class="badge-type">Staff</div>
+            </div>
+
+            <div class="badge-photo" role="img" aria-label="Portrait photo"></div>
+
+            <div class="badge-person">
+              <h2 class="foil-text" id="badge-name" data-foil-text="D. Muntean">D. Muntean</h2>
+              <p id="badge-role">Product Design</p>
+              <p class="dept">Design · Zürich</p>
+            </div>
+
+            <div class="badge-foot">
+              <dl>
+                <div class="row"><dt>ID </dt><dd>TW-0421</dd></div>
+                <div class="row"><dt>Since </dt><dd>2026</dd></div>
+              </dl>
+              <div class="badge-code" aria-hidden="true"></div>
+            </div>
+            <!-- ─────────────────────────────────────────────── -->
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <p class="stage-foot">Move the pointer anywhere on the page. The badge tilts under it and the hologram catches the light. On a phone, drag across it or tilt the device.</p>
+</main>
+
+<script>
+(() => {
+  const entrance = document.querySelector('[data-badge-entrance]');
+  const target   = document.querySelector('[data-badge-target]');
+  const badge    = document.querySelector('[data-badge]');
+  if (!entrance || !target || !badge) return;
+
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Tuning
+  const MAX_TILT   = reduceMotion ? 0 : 11;   // deg at the card's edge
+  const MAX_SHIFT  = reduceMotion ? 0 : 6;    // px the card drifts toward the pointer
+  const HOVER_ZOOM = reduceMotion ? 1 : 1.02;
+  const SPEED      = 10;                      // higher = snappier follow
+
+  // Linear inside the card, then eases to a hard cap of ±1.25 far away.
+  const soft = v => {
+    const a = Math.abs(v);
+    const s = a <= 1 ? a : 1 + .25 * (1 - Math.exp(-(a - 1) * 1.5));
+    return Math.sign(v) * s;
+  };
+  const lerp = (a, b, t) => a + (b - a) * t;
+
+  const rest = { rx: 0, ry: 0, tx: 0, ty: 0, fx: 50, fy: 50, bx: 50, by: 50,
+                 shift: 50, ax: .7, ay: .7, active: .35, scale: 1 };
+  const cur  = { ...rest, active: 0 };
+  const tgt  = { ...rest };
+
+  let pointerLive = false;
+  let lastInput   = 0;
+
+  function aim(dx, dy) {
+    const inside = Math.abs(dx) <= 1 && Math.abs(dy) <= 1;
+    const sx = soft(dx), sy = soft(dy);
+    tgt.ry = sx * MAX_TILT;
+    tgt.rx = -sy * MAX_TILT;
+    tgt.tx = sx * MAX_SHIFT;
+    tgt.ty = sy * MAX_SHIFT;
+    tgt.fx = 50 + sx * 50;
+    tgt.fy = 50 + sy * 50;
+    tgt.bx = 50 + sx * 90;
+    tgt.by = 50 + sy * 90;
+    tgt.shift = 50 + sx * 38 - sy * 16;
+    const len = Math.hypot(dx, dy) || 1;
+    tgt.ax = dx / len; tgt.ay = dy / len;
+    tgt.active = inside ? 1 : 0.6;
+    tgt.scale  = inside ? HOVER_ZOOM : 1;
+    pointerLive = true;
+    lastInput = performance.now();
+  }
+
+  // Measure the untransformed wrapper, never the tilting card itself.
+  let box = null;
+  function measure() { box = entrance.getBoundingClientRect(); }
+  addEventListener('resize', measure);
+  addEventListener('scroll', measure, { passive: true });
+
+  function aimAt(clientX, clientY) {
+    if (!box) measure();
+    aim((clientX - (box.left + box.width  / 2)) / (box.width  / 2),
+        (clientY - (box.top  + box.height / 2)) / (box.height / 2));
+  }
+  function release() { pointerLive = false; }
+
+  addEventListener('pointermove', e => aimAt(e.clientX, e.clientY), { passive: true });
+  addEventListener('pointerdown', e => aimAt(e.clientX, e.clientY), { passive: true });
+  addEventListener('pointerup',   e => { if (e.pointerType !== 'mouse') release(); }, { passive: true });
+  addEventListener('pointercancel', release);
+  addEventListener('blur', release);
+  document.addEventListener('mouseleave', release);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) release(); });
+
+  let kx = 0, ky = 0;
+  target.addEventListener('keydown', e => {
+    const step = .25;
+    if (e.key === 'ArrowLeft')       kx = Math.max(-1.5, kx - step);
+    else if (e.key === 'ArrowRight') kx = Math.min(1.5, kx + step);
+    else if (e.key === 'ArrowUp')    ky = Math.max(-1.5, ky - step);
+    else if (e.key === 'ArrowDown')  ky = Math.min(1.5, ky + step);
+    else return;
+    e.preventDefault();
+    aim(kx, ky);
+  });
+  target.addEventListener('blur', () => { kx = ky = 0; release(); });
+
+  let orientationReady = false;
+  function onOrientation(e) {
+    if (pointerLive && performance.now() - lastInput < 1500) return;
+    if (e.gamma == null || e.beta == null) return;
+    const dx = Math.max(-1.5, Math.min(1.5, e.gamma / 25));
+    const dy = Math.max(-1.5, Math.min(1.5, (e.beta - 45) / 25));
+    aim(dx, dy);
+    pointerLive = false;
+    tgt.active = .8;
+  }
+  function armOrientation() {
+    if (orientationReady || !('DeviceOrientationEvent' in window)) return;
+    orientationReady = true;
+    const D = window.DeviceOrientationEvent;
+    if (typeof D.requestPermission === 'function') {
+      D.requestPermission().then(state => {
+        if (state === 'granted') addEventListener('deviceorientation', onOrientation);
+      }).catch(() => {});
+    } else {
+      addEventListener('deviceorientation', onOrientation);
+    }
+  }
+  if (matchMedia('(hover: none) and (pointer: coarse)').matches) {
+    addEventListener('pointerdown', armOrientation, { once: true, passive: true });
+  }
+
+  let prev = performance.now();
+  let started = false;
+  function frame(now) {
+    const dt = Math.min(.05, (now - prev) / 1000); prev = now;
+    const k  = 1 - Math.exp(-dt * SPEED);
+
+    const live = pointerLive || now - lastInput < 400;
+    if (!live) {
+      const t = now / 1000;
+      tgt.rx = reduceMotion ? 0 : Math.sin(t * .45) * 1.6;
+      tgt.ry = reduceMotion ? 0 : Math.cos(t * .38) * 2.2;
+      tgt.tx = 0; tgt.ty = 0;
+      tgt.fx = 50 + Math.sin(t * .50) * 28;
+      tgt.fy = 50 + Math.cos(t * .37) * 22;
+      tgt.bx = 50 + Math.sin(t * .50) * 60;
+      tgt.by = 50 + Math.cos(t * .37) * 40;
+      tgt.shift = 50 + Math.sin(t * .30) * 22;
+      tgt.ax = Math.cos(t * .25); tgt.ay = Math.sin(t * .25);
+      tgt.active = .35;
+      tgt.scale = 1;
+    }
+
+    for (const key in cur) cur[key] = lerp(cur[key], tgt[key], k);
+
+    const angle = Math.atan2(cur.ay, cur.ax) * 180 / Math.PI + 90;
+    const s = target.style;
+    s.setProperty('--rx', cur.rx.toFixed(2) + 'deg');
+    s.setProperty('--ry', cur.ry.toFixed(2) + 'deg');
+    s.setProperty('--tx', cur.tx.toFixed(2) + 'px');
+    s.setProperty('--ty', cur.ty.toFixed(2) + 'px');
+    s.setProperty('--scale', cur.scale.toFixed(4));
+
+    const f = badge.style;
+    f.setProperty('--foil-x', cur.fx.toFixed(2) + '%');
+    f.setProperty('--foil-y', cur.fy.toFixed(2) + '%');
+    f.setProperty('--foil-band-x', cur.bx.toFixed(2) + '%');
+    f.setProperty('--foil-band-y', cur.by.toFixed(2) + '%');
+    f.setProperty('--rainbow-shift', cur.shift.toFixed(2) + '%');
+    f.setProperty('--rainbow-angle', angle.toFixed(2) + 'deg');
+    f.setProperty('--foil-active', cur.active.toFixed(3));
+
+    requestAnimationFrame(frame);
+  }
+
+  const start = () => {
+    if (started) return;
+    started = true; measure(); prev = performance.now(); requestAnimationFrame(frame);
+  };
+  if (reduceMotion) start();
+  else entrance.addEventListener('animationend', start, { once: true });
+  setTimeout(start, 1400);
+})();
+</script>
+</body>
+</html>
