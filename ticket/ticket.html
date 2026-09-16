@@ -1,0 +1,502 @@
+<title>Foil Beta Ticket</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=DM+Sans:opsz,wght@9..40,400;9..40,500&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  /* ── Tokens ─────────────────────────────────────────────── */
+  :root {
+    color-scheme: dark;
+    --stage:       #0b0c10;
+    --stage-glow:  #181a26;
+    --ink:         #e9eaf0;
+    --muted:       #7f8494;
+    --ticket-base: #15161c;
+    --ticket-deep: #0e0f14;
+    --silver-1:    #f6f7fa;
+    --silver-2:    #a7adbb;
+    --edge:        rgba(255, 255, 255, .30);
+
+    /* holographic band colours */
+    --holo-1: #ff8f8f; --holo-2: #ffd08a; --holo-3: #c8ff8f;
+    --holo-4: #8fffd4; --holo-5: #8fb8ff; --holo-6: #d48fff; --holo-7: #ff8fd8;
+
+    --font-display: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    --font-body:    "DM Sans", "Helvetica Neue", Arial, sans-serif;
+    --font-mono:    "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  }
+
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(120% 80% at 50% 110%, var(--stage-glow) 0%, transparent 60%),
+      var(--stage);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .stage {
+    min-height: 100%;
+    box-sizing: border-box;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: 24px;
+    padding-inline: 16px;
+    padding-block: 28px;
+    max-width: 720px;
+    margin-inline: auto;
+  }
+  .stage-head {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .stage-center {
+    display: grid; place-items: center;
+    perspective: 1400px;
+    padding-block: 24px;
+  }
+  .stage-foot {
+    text-align: center; color: var(--muted); font-size: 13px;
+    text-wrap: balance;
+  }
+  .stage-foot kbd {
+    font-family: var(--font-mono); font-size: 11px;
+    padding: 2px 6px; border-radius: 4px;
+    border: 1px solid rgba(255,255,255,.14); color: var(--ink);
+  }
+
+  /* ── Entrance & tilt wrappers ───────────────────────────── */
+  .ticket-entrance {
+    width: min(100%, 460px);
+    animation: ticket-enter 1100ms cubic-bezier(.2, .8, .2, 1) both;
+    transform-style: preserve-3d;
+  }
+  @keyframes ticket-enter {
+    from { opacity: 0; transform: translateY(48px) rotateX(22deg) scale(.94); }
+    to   { opacity: 1; transform: translateY(0)   rotateX(0)     scale(1); }
+  }
+
+  .ticket-target {
+    --rx: 0deg; --ry: 0deg; --tx: 0px; --ty: 0px; --scale: 1;
+    transform-style: preserve-3d;
+    transform:
+      translate3d(var(--tx), var(--ty), 0)
+      rotateX(var(--rx)) rotateY(var(--ry))
+      scale(var(--scale));
+    filter: drop-shadow(
+      calc(var(--tx) * -1.6)
+      calc(var(--ty) * -1.6 + 26px)
+      30px rgba(0, 0, 0, .6)
+    );
+    will-change: transform, filter;
+  }
+
+  /* ── The ticket ─────────────────────────────────────────── */
+  .ticket {
+    /* geometry: 400 × 250 mask with a stub divider at x = 294 */
+    --ticket-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250' preserveAspectRatio='none'><path fill='%23fff' fill-rule='evenodd' d='M18 0H282A12 12 0 0 0 306 0H382A18 18 0 0 1 400 18V232A18 18 0 0 1 382 250H306A12 12 0 0 0 282 250H18A18 18 0 0 1 0 232V18A18 18 0 0 1 18 0Z M294 24 m-2 0 a2 2 0 1 0 4 0 a2 2 0 1 0 -4 0 M294 36 m-2 0 a2 2 0 1 0 4 0 a2 2 0 1 0 -4 0 M294 48 m-2 0 a2 2 0 1 0 4 0 a2 2 0 1 0 -4 0 M294 60 m-2 0 a2 2 0 1 0 4 0 a2 2 0 1 0 -4 0 M294 72 m-2 0 a2 2 0 1 0 4 0 a2 2 0 1 0 -4 0 M294 84 m-2 0 a2 2 0 1 0 4 0 a2 2 0 1 0 -4 0 M294 96 m-2 0 a2 2 0 1 0 4 0 a2 2 0 1 0 -4 0 M294 108 m-2 0 a2 2 0 1 0 4 0 a2 2 0 1 0 -4 0 M294 120 m-2 0 a2 2 0 1 0 4 0 a2 2 0 1 0 -4 0 M294 132 m-2 0 a2 2 0 1 0 4 0 a2 2 0 1 0 -4 0 M294 144 m-2 0 a2 2 0 1 0 4 0 a2 2 0 1 0 -4 0 M294 156 m-2 0 a2 2 0 1 0 4 0 a2 2 0 1 0 -4 0 M294 168 m-2 0 a2 2 0 1 0 4 0 a2 2 0 1 0 -4 0 M294 180 m-2 0 a2 2 0 1 0 4 0 a2 2 0 1 0 -4 0 M294 192 m-2 0 a2 2 0 1 0 4 0 a2 2 0 1 0 -4 0 M294 204 m-2 0 a2 2 0 1 0 4 0 a2 2 0 1 0 -4 0 M294 216 m-2 0 a2 2 0 1 0 4 0 a2 2 0 1 0 -4 0 M294 228 m-2 0 a2 2 0 1 0 4 0 a2 2 0 1 0 -4 0'/></svg>");
+    --ticket-mark: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><path fill='%23fff' d='M32 2C36 22 42 28 62 32 42 36 36 42 32 62 28 42 22 36 2 32 22 28 28 22 32 2Z'/><circle cx='32' cy='32' r='5' fill='%23000'/></svg>");
+    --foil-texture: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='240' height='240' filter='url(%23g)'/></svg>");
+
+    /* live foil state — written by the pointer loop */
+    --rainbow-shift: 50%;
+    --rainbow-angle: 45deg;
+    --foil-active: 0;
+    --foil-x: 50%;
+    --foil-y: 50%;
+    --foil-band-x: 50%;
+    --foil-band-y: 50%;
+
+    --stub: 76.5%;              /* 306 / 400 */
+    --rainbow: linear-gradient(var(--rainbow-angle),
+      var(--holo-1) 0%, var(--holo-2) 14%, var(--holo-3) 28%, var(--holo-4) 43%,
+      var(--holo-5) 57%, var(--holo-6) 71%, var(--holo-7) 86%, var(--holo-1) 100%);
+
+    position: relative;
+    width: 100%;
+    aspect-ratio: 8 / 5;
+    isolation: isolate;
+    background: linear-gradient(160deg, var(--ticket-base), var(--ticket-deep));
+    -webkit-mask: var(--ticket-mask) center / 100% 100% no-repeat;
+            mask: var(--ticket-mask) center / 100% 100% no-repeat;
+    transform: translateZ(0);
+    user-select: none;
+  }
+
+  .ticket-surface { position: absolute; inset: 0; pointer-events: none; }
+  .ticket-surface > * { position: absolute; inset: 0; }
+
+  /* holographic colour, strongest where the light hits */
+  .ticket-colors {
+    background: var(--rainbow);
+    background-size: 150% 150%;
+    background-position: var(--rainbow-shift) 50%;
+    opacity: calc(.18 + .62 * var(--foil-active));
+    mix-blend-mode: screen;
+    -webkit-mask-image: radial-gradient(70% 70% at var(--foil-x) var(--foil-y),
+      #000 0%, rgba(0,0,0,.55) 45%, rgba(0,0,0,.12) 80%, transparent 100%);
+            mask-image: radial-gradient(70% 70% at var(--foil-x) var(--foil-y),
+      #000 0%, rgba(0,0,0,.55) 45%, rgba(0,0,0,.12) 80%, transparent 100%);
+  }
+
+  /* micro-texture + diffraction lines that slide with the pointer */
+  .ticket-grain {
+    background:
+      repeating-linear-gradient(calc(var(--rainbow-angle) + 90deg),
+        rgba(255,255,255,.07) 0 1px, transparent 1px 3px),
+      var(--foil-texture);
+    background-size: 100% 100%, 240px 240px;
+    background-position: var(--foil-x) var(--foil-y), 0 0;
+    mix-blend-mode: overlay;
+    opacity: .55;
+  }
+
+  /* specular band that follows, plus the one-time entrance sweep */
+  .ticket-sweep {
+    background: linear-gradient(var(--rainbow-angle),
+      transparent 36%, rgba(255,255,255,.22) 48%, rgba(255,255,255,.34) 50%,
+      rgba(255,255,255,.22) 52%, transparent 64%);
+    background-size: 220% 220%;
+    background-position: var(--foil-band-x) var(--foil-band-y);
+    mix-blend-mode: soft-light;
+    opacity: calc(.35 + .65 * var(--foil-active));
+  }
+  .ticket-sweep::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(105deg,
+      transparent 38%, rgba(255,255,255,.55) 50%, transparent 62%);
+    background-size: 300% 100%;
+    background-position: 120% 0;
+    animation: ticket-sweep 1500ms cubic-bezier(.4, 0, .2, 1) 550ms both;
+  }
+  @keyframes ticket-sweep {
+    from { background-position: 120% 0; }
+    to   { background-position: -20% 0; }
+  }
+
+  /* a 1.5px rim that traces the ticket shape, brighter toward the light */
+  .ticket-edge {
+    background: radial-gradient(90% 90% at var(--foil-x) var(--foil-y),
+      rgba(255,255,255,.75) 0%, var(--edge) 45%, rgba(255,255,255,.10) 100%);
+    -webkit-mask:
+      var(--ticket-mask) center / 100% 100% no-repeat,
+      var(--ticket-mask) center / calc(100% - 3px) calc(100% - 3px) no-repeat;
+    -webkit-mask-composite: xor;
+            mask:
+      var(--ticket-mask) center / 100% 100% no-repeat,
+      var(--ticket-mask) center / calc(100% - 3px) calc(100% - 3px) no-repeat;
+            mask-composite: exclude;
+  }
+
+  /* ── Logo mark: the same foil material, cut to the mark ─── */
+  .ticket-mark {
+    position: absolute;
+    top: 9%; left: 6.5%;
+    width: 11.5%; aspect-ratio: 1;
+    background: linear-gradient(160deg, var(--silver-1), var(--silver-2));
+    -webkit-mask: var(--ticket-mark) center / contain no-repeat;
+            mask: var(--ticket-mark) center / contain no-repeat;
+  }
+  .ticket-logo-material .ticket-colors {
+    opacity: calc(.35 + .65 * var(--foil-active));
+    mix-blend-mode: multiply;
+    -webkit-mask-image: none; mask-image: none;
+  }
+  .ticket-logo-material .ticket-grain { opacity: .35; }
+
+  /* ── Copy ───────────────────────────────────────────────── */
+  .ticket-copy {
+    position: absolute;
+    left: 6.5%; right: calc(100% - var(--stub) + 5%);
+    bottom: 10%;
+    display: grid; gap: 6px;
+  }
+  .ticket-copy h2, .ticket-copy p { margin: 0; }
+  .ticket-copy h2 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-variation-settings: "opsz" 144, "SOFT" 40;
+    font-size: clamp(34px, 11cqw, 54px);
+    line-height: 1;
+    letter-spacing: -.02em;
+  }
+  .ticket-copy p {
+    font-size: clamp(13px, 3.6cqw, 16px);
+    line-height: 1.35;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+  .ticket { container-type: inline-size; }
+
+  .foil-text {
+    position: relative;
+    width: max-content;
+    color: transparent;
+    background: linear-gradient(180deg, var(--silver-1) 0%, var(--silver-2) 100%);
+    -webkit-background-clip: text; background-clip: text;
+  }
+  .foil-text::after {
+    content: attr(data-foil-text);
+    position: absolute; inset: 0;
+    white-space: pre-line;
+    color: transparent;
+    background: var(--rainbow);
+    background-size: 300% 300%;
+    background-position: var(--rainbow-shift) 50%;
+    -webkit-background-clip: text; background-clip: text;
+    opacity: calc(.9 * var(--foil-active));
+    -webkit-mask-image: radial-gradient(120% 160% at var(--foil-x) var(--foil-y),
+      #000 0%, rgba(0,0,0,.35) 60%, transparent 100%);
+            mask-image: radial-gradient(120% 160% at var(--foil-x) var(--foil-y),
+      #000 0%, rgba(0,0,0,.35) 60%, transparent 100%);
+    pointer-events: none;
+  }
+
+  /* ── Stub: serial and access line, set vertically ───────── */
+  .ticket-meta {
+    position: absolute;
+    top: 6.5%; left: 6.5%;
+    right: calc(100% - var(--stub) + 5%);
+    display: flex; justify-content: flex-end;
+    font-family: var(--font-mono); font-size: clamp(9px, 2.4cqw, 11px);
+    letter-spacing: .14em; text-transform: uppercase;
+    color: var(--silver-2); opacity: .8;
+    font-variant-numeric: tabular-nums;
+  }
+  .ticket-stub {
+    position: absolute;
+    top: 0; bottom: 0; left: var(--stub); right: 0;
+    display: grid; place-items: center;
+    font-family: var(--font-mono); font-size: clamp(9px, 2.4cqw, 11px);
+    letter-spacing: .16em; text-transform: uppercase;
+    color: var(--silver-2);
+    writing-mode: vertical-rl; transform: rotate(180deg);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .ticket-stub i { font-style: normal; opacity: .55; }
+
+  /* ── Motion preferences ─────────────────────────────────── */
+  @media (prefers-reduced-motion: reduce) {
+    .ticket-entrance, .ticket-sweep::after { animation: none; }
+    .ticket-target { transition: none; }
+  }
+  .ticket-target:focus-visible { outline: 2px solid var(--holo-5); outline-offset: 8px; border-radius: 18px; }
+</style>
+
+<main class="stage">
+  <header class="stage-head" aria-hidden="true">
+    <span>Beta access</span>
+    <span>Series A · 2026</span>
+  </header>
+
+  <div class="stage-center">
+    <div class="ticket-entrance" data-ticket-entrance>
+      <div class="ticket-target" data-ticket-target tabindex="0" role="group" aria-label="Beta ticket">
+        <section class="ticket" data-ticket aria-labelledby="beta-ticket-title" aria-describedby="beta-ticket-description">
+          <div class="ticket-surface" aria-hidden="true">
+            <div class="ticket-colors"></div>
+            <div class="ticket-grain"></div>
+            <div class="ticket-sweep" data-ticket-sweep></div>
+            <div class="ticket-edge"></div>
+          </div>
+
+          <div class="ticket-mark ticket-logo" role="img" aria-label="Ticket mark">
+            <div class="ticket-surface ticket-logo-material" aria-hidden="true">
+              <div class="ticket-colors"></div>
+              <div class="ticket-grain"></div>
+            </div>
+          </div>
+
+          <div class="ticket-meta" aria-hidden="true">№ 000 421</div>
+
+          <div class="ticket-copy">
+            <h2 class="foil-text" id="beta-ticket-title" data-ticket-title data-foil-text="Thanks!" tabindex="-1">Thanks!</h2>
+            <p class="foil-text" id="beta-ticket-description" data-ticket-description data-foil-text="Check your inbox
+to confirm your email.">Check your inbox <br>to confirm your email.</p>
+          </div>
+
+          <div class="ticket-stub" aria-hidden="true"><span>Admit one <i>·</i> Beta</span></div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <p class="stage-foot">Move the pointer anywhere on the page. The ticket leans toward it and the foil catches the light. On a phone, drag across it or tilt the device.</p>
+</main>
+
+<script>
+(() => {
+  const entrance = document.querySelector('[data-ticket-entrance]');
+  const target   = document.querySelector('[data-ticket-target]');
+  const ticket   = document.querySelector('[data-ticket]');
+  if (!entrance || !target || !ticket) return;
+
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Tuning
+  const MAX_TILT   = reduceMotion ? 0 : 15;   // deg
+  const MAX_SHIFT  = reduceMotion ? 0 : 10;   // px the card drifts toward the pointer
+  const HOVER_ZOOM = reduceMotion ? 1 : 1.025;
+  const SPEED      = 9;                       // higher = snappier follow
+
+  // Soft-clamps a distance so the ticket keeps responding far outside its box
+  // without ever over-rotating: ±1 at its edge, tends to ±1.67 at infinity.
+  const soft = v => v / (1 + Math.abs(v) * 0.6) * 1.0;
+  const lerp = (a, b, t) => a + (b - a) * t;
+
+  const rest = { rx: 0, ry: 0, tx: 0, ty: 0, fx: 50, fy: 50, bx: 50, by: 50,
+                 shift: 50, ax: .7, ay: .7, active: .35, scale: 1 };
+  const cur  = { ...rest, active: 0 };
+  const tgt  = { ...rest };
+
+  let pointerLive = false;   // a pointer is currently on the page
+  let lastInput   = 0;       // last time any input aimed the ticket
+
+  function aim(dx, dy) {
+    // dx, dy are pointer offsets from the ticket centre in half-widths / half-heights
+    const inside = Math.abs(dx) <= 1 && Math.abs(dy) <= 1;
+    const sx = soft(dx), sy = soft(dy);
+
+    tgt.ry = sx * MAX_TILT;
+    tgt.rx = -sy * MAX_TILT;
+    tgt.tx = sx * MAX_SHIFT;
+    tgt.ty = sy * MAX_SHIFT;
+
+    tgt.fx = 50 + sx * 55;              // highlight may run just past the edge
+    tgt.fy = 50 + sy * 55;
+    tgt.bx = 50 + sx * 90;
+    tgt.by = 50 + sy * 90;
+    tgt.shift = 50 + sx * 38 - sy * 16; // rainbow slides against the movement
+
+    const len = Math.hypot(dx, dy) || 1;
+    tgt.ax = dx / len; tgt.ay = dy / len;
+
+    tgt.active = inside ? 1 : 0.6;
+    tgt.scale  = inside ? HOVER_ZOOM : 1;
+
+    pointerLive = true;
+    lastInput = performance.now();
+  }
+
+  function aimAt(clientX, clientY) {
+    const r = ticket.getBoundingClientRect();
+    aim((clientX - (r.left + r.width  / 2)) / (r.width  / 2),
+        (clientY - (r.top  + r.height / 2)) / (r.height / 2));
+  }
+
+  function release() {
+    pointerLive = false;
+  }
+
+  // ── Input: pointer anywhere on the page ─────────────────
+  addEventListener('pointermove', e => aimAt(e.clientX, e.clientY), { passive: true });
+  addEventListener('pointerdown', e => aimAt(e.clientX, e.clientY), { passive: true });
+  addEventListener('pointerup',   e => { if (e.pointerType !== 'mouse') release(); }, { passive: true });
+  addEventListener('pointercancel', release);
+  addEventListener('blur', release);
+  document.addEventListener('mouseleave', release);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) release(); });
+
+  // Keyboard: arrow keys nudge the light when the ticket is focused
+  let kx = 0, ky = 0;
+  target.addEventListener('keydown', e => {
+    const step = .25;
+    if (e.key === 'ArrowLeft')  kx = Math.max(-1.5, kx - step);
+    else if (e.key === 'ArrowRight') kx = Math.min(1.5, kx + step);
+    else if (e.key === 'ArrowUp')    ky = Math.max(-1.5, ky - step);
+    else if (e.key === 'ArrowDown')  ky = Math.min(1.5, ky + step);
+    else return;
+    e.preventDefault();
+    aim(kx, ky);
+  });
+  target.addEventListener('blur', () => { kx = ky = 0; release(); });
+
+  // ── Input: device tilt on phones (iOS asks permission on first tap) ──
+  let orientationReady = false;
+  function onOrientation(e) {
+    if (pointerLive && performance.now() - lastInput < 1500) return; // finger wins
+    if (e.gamma == null || e.beta == null) return;
+    const dx = Math.max(-1.5, Math.min(1.5, e.gamma / 25));          // left–right
+    const dy = Math.max(-1.5, Math.min(1.5, (e.beta - 45) / 25));    // front–back, resting at ~45°
+    aim(dx, dy);
+    pointerLive = false;    // orientation input expires on its own via lastInput
+    tgt.active = .8;
+  }
+  function armOrientation() {
+    if (orientationReady || !('DeviceOrientationEvent' in window)) return;
+    orientationReady = true;
+    const D = window.DeviceOrientationEvent;
+    if (typeof D.requestPermission === 'function') {
+      D.requestPermission().then(state => {
+        if (state === 'granted') addEventListener('deviceorientation', onOrientation);
+      }).catch(() => {});
+    } else {
+      addEventListener('deviceorientation', onOrientation);
+    }
+  }
+  if (matchMedia('(hover: none) and (pointer: coarse)').matches) {
+    addEventListener('pointerdown', armOrientation, { once: true, passive: true });
+  }
+
+  // ── Loop ────────────────────────────────────────────────
+  let prev = performance.now();
+  let started = false;
+  function frame(now) {
+    const dt = Math.min(.05, (now - prev) / 1000); prev = now;
+    const k  = 1 - Math.exp(-dt * SPEED);
+
+    const live = pointerLive || now - lastInput < 400;
+    if (!live) {
+      // Ambient: a slow light drift so the foil never looks dead
+      const t = now / 1000;
+      tgt.rx = reduceMotion ? 0 : Math.sin(t * .45) * 1.6;
+      tgt.ry = reduceMotion ? 0 : Math.cos(t * .38) * 2.2;
+      tgt.tx = 0; tgt.ty = 0;
+      tgt.fx = 50 + Math.sin(t * .50) * 28;
+      tgt.fy = 50 + Math.cos(t * .37) * 22;
+      tgt.bx = 50 + Math.sin(t * .50) * 60;
+      tgt.by = 50 + Math.cos(t * .37) * 40;
+      tgt.shift = 50 + Math.sin(t * .30) * 22;
+      tgt.ax = Math.cos(t * .25); tgt.ay = Math.sin(t * .25);
+      tgt.active = .35;
+      tgt.scale = 1;
+    }
+
+    for (const key in cur) cur[key] = lerp(cur[key], tgt[key], k);
+
+    const angle = Math.atan2(cur.ay, cur.ax) * 180 / Math.PI + 90;
+    const s = target.style;
+    s.setProperty('--rx', cur.rx.toFixed(2) + 'deg');
+    s.setProperty('--ry', cur.ry.toFixed(2) + 'deg');
+    s.setProperty('--tx', cur.tx.toFixed(2) + 'px');
+    s.setProperty('--ty', cur.ty.toFixed(2) + 'px');
+    s.setProperty('--scale', cur.scale.toFixed(4));
+
+    const f = ticket.style;
+    f.setProperty('--foil-x', cur.fx.toFixed(2) + '%');
+    f.setProperty('--foil-y', cur.fy.toFixed(2) + '%');
+    f.setProperty('--foil-band-x', cur.bx.toFixed(2) + '%');
+    f.setProperty('--foil-band-y', cur.by.toFixed(2) + '%');
+    f.setProperty('--rainbow-shift', cur.shift.toFixed(2) + '%');
+    f.setProperty('--rainbow-angle', angle.toFixed(2) + 'deg');
+    f.setProperty('--foil-active', cur.active.toFixed(3));
+
+    requestAnimationFrame(frame);
+  }
+
+  // Wait for the entrance to land before the tilt takes over the transform chain
+  const start = () => {
+    if (started) return;
+    started = true; prev = performance.now(); requestAnimationFrame(frame);
+  };
+  if (reduceMotion) start();
+  else entrance.addEventListener('animationend', start, { once: true });
+  // Safety net if animationend never fires (e.g. the tab was hidden during load)
+  setTimeout(start, 1400);
+})();
+</script>
